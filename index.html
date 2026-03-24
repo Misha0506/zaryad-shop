@@ -37,12 +37,16 @@
         .photo-slot input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
         .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: none; }
 
-        /* Стилі для списку видалення в адмінці */
         .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
         .btn-del { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .btn-del-all { background: #000; color: #fff; border: 2px solid #ff4444; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
 
         #success-card { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; width:85%; padding:30px; border-radius:25px; text-align:center; z-index:7000; box-shadow:0 10px 50px rgba(0,0,0,0.3); border: 2px solid var(--green); }
+
+        .cat-row { display: flex; gap: 8px; overflow-x: auto; padding: 0 10px 15px 10px; scrollbar-width: none; }
+        .cat-row::-webkit-scrollbar { display: none; }
+        .cat-b { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #fff; white-space: nowrap; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .cat-b.act { background: var(--orange); color: #fff; border-color: var(--orange); }
     </style>
 </head>
 <body>
@@ -57,8 +61,16 @@
 <div class="section-box">
     <h2 class="about-title">Про нас ⚡️</h2>
     <p style="font-size: 14px; color: #444; margin: 0; line-height: 1.5;">
-        <b>ZARYAD_OFFICIAL.UA</b> — ваш провідник у світ автономної енергії. Ми спеціалізуємось на павербанках та зарядних станціях, щоб ви залишалися на зв'язку в будь-якій ситуації.
+        <b>ZARYAD_OFFICIAL.UA</b> — ваш провідник у світ автономної енергії. Ми спеціалізуємось на павербанкax та зарядних станціях, щоб ви залишалися на зв'язку в будь-якій ситуації.
     </p>
+</div>
+
+<div class="cat-row">
+    <button class="cat-b act" onclick="fCat('all', this)">Усі товари</button>
+    <button class="cat-b" onclick="fCat('навушник', this)">Навушники</button>
+    <button class="cat-b" onclick="fCat('павербанк', this)">Павербанки</button>
+    <button class="cat-b" onclick="fCat('станція', this)">Зарядні станції</button>
+    <button class="cat-b" onclick="fCat('годин', this)">Розумні годинники</button>
 </div>
 
 <div class="products" id="grid"></div>
@@ -101,6 +113,15 @@
 
     <input type="text" id="pName" placeholder="Назва товару" style="width:100%; padding:12px; margin:5px 0;">
     <input type="number" id="pPrice" placeholder="Ціна (грн)" style="width:100%; padding:12px; margin:5px 0;">
+    
+    <select id="pCatSelect" style="width:100%; padding:12px; margin:5px 0; border:1px solid #ccc; border-radius:5px;">
+        <option value="">Без категорії</option>
+        <option value="навушник">Навушники</option>
+        <option value="павербанк">Павербанки</option>
+        <option value="станція">Зарядні станції</option>
+        <option value="годин">Розумні годинники</option>
+    </select>
+
     <textarea id="pDesc" placeholder="Опис товару" rows="4" style="width:100%; padding:12px; margin:5px 0;"></textarea>
     
     <div class="photo-grid">
@@ -124,25 +145,34 @@
     let db = JSON.parse(localStorage.getItem('zaryad_db')) || [];
     let cart = JSON.parse(localStorage.getItem('zaryad_cart')) || [];
 
+    function fCat(c, b) {
+        document.querySelectorAll('.cat-b').forEach(btn => btn.classList.remove('act'));
+        b.classList.add('act');
+        const cards = document.querySelectorAll('.p-card');
+        cards.forEach(card => {
+            const name = card.getAttribute('data-cat') || card.innerText.toLowerCase();
+            card.style.display = (c === 'all' || name.includes(c)) ? 'flex' : 'none';
+        });
+    }
+
     function toggleModal(id) {
         const m = document.getElementById(id);
         if(id === 'admin' && m.style.display !== 'block') {
             if(prompt("Пароль:") !== 'Sss0924') return;
-            renderAdminList(); // Оновити список при відкритті адмінки
+            renderAdminList();
         }
         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
         if(id === 'cart-modal' && m.style.display === 'block') updateCartUI();
     }
 
-    // Рендер списку товарів в адмінці для видалення
     function renderAdminList() {
         const list = document.getElementById('admin-product-list');
-        list.innerHTML = db.map((p, i) => `
-            <div class="admin-item">
+        list.innerHTML = db.map((p, i) => 
+            `<div class="admin-item">
                 <span>${p.name} (${p.price} ₴)</span>
                 <button class="btn-del" onclick="deleteProduct(${i})">Видалити</button>
-            </div>
-        `).join('');
+            </div>`
+        ).join('');
     }
 
     function deleteProduct(i) {
@@ -182,7 +212,7 @@
         grid.innerHTML = '';
         db.forEach((p, idx) => {
             grid.innerHTML += `
-            <div class="p-card">
+            <div class="p-card" data-cat="${p.cat || ''}">
                 <img src="${p.imgs[0]}" onclick="openProduct(${idx})">
                 <h3 onclick="openProduct(${idx})">${p.name}</h3>
                 <div class="p-price">${p.price} ₴</div>
@@ -221,8 +251,7 @@
                     </div>
                     <button class="btn-buy" onclick="addToCart(${idx}, 'modal')" style="width: 100%; padding: 15px;">ДОДАТИ В КОШИК</button>
                 </div>
-            </div>
-        `;
+            </div>`;
         toggleModal('p-modal');
     }
 
@@ -275,7 +304,6 @@
         const name = document.getElementById('custName').value;
         const phone = document.getElementById('custPhone').value;
         if(!name || !phone) return alert("Заповніть дані!");
-
         let text = `🚀 НОВЕ ЗАМОВЛЕННЯ\n👤 Клієнт: ${name}\n📞 Тел: ${phone}\n\n🛒 ТОВАРИ:\n`;
         let total = 0;
         cart.forEach(i => {
@@ -283,7 +311,6 @@
             total += i.price * i.qty;
         });
         text += `\n💰 РАЗОМ: ${total} ₴`;
-
         try {
             const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
                 method: 'POST',
@@ -311,6 +338,7 @@
         const newProduct = {
             name: document.getElementById('pName').value,
             price: parseInt(document.getElementById('pPrice').value),
+            cat: document.getElementById('pCatSelect').value, // ЗБЕРІГАЄМО КАТЕГОРІЮ
             desc: document.getElementById('pDesc').value,
             imgs: imgs
         };
@@ -318,16 +346,15 @@
         db.unshift(newProduct);
         localStorage.setItem('zaryad_db', JSON.stringify(db));
         
-        // Очищення полів після збереження
         document.getElementById('pName').value = '';
         document.getElementById('pPrice').value = '';
         document.getElementById('pDesc').value = '';
+        document.getElementById('pCatSelect').value = '';
         for(let i=1; i<=5; i++) {
             document.getElementById('img'+i).style.display = 'none';
             document.getElementById('img'+i).src = '';
-            document.querySelector('.photo-slot span').style.display = 'block';
+            document.querySelectorAll('.photo-slot span').forEach(s => s.style.display = 'block');
         }
-
         render();
         renderAdminList();
         alert("Товар збережено!");
