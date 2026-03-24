@@ -1,77 +1,6 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин Заряд</title>
-    <style>
-        .category-filter {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 15px;
-            background: #fff;
-            position: sticky;
-            top: 60px; /* щоб було під шапкою */
-            z-index: 99;
-            border-bottom: 1px solid #eee;
-            scrollbar-width: none;
-        }
-        .category-filter::-webkit-scrollbar { display: none; }
-        .cat-btn {
-            padding: 8px 18px;
-            border-radius: 20px;
-            border: 1px solid #333;
-            background: white;
-            white-space: nowrap;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .cat-btn.active {
-            background: #333;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-
-<div class="category-filter" id="cat-bar">
-    <button class="cat-btn active" onclick="filterByCat('all', this)">Усі товари</button>
-    <button class="cat-btn" onclick="filterByCat('навушники', this)">Навушники</button>
-    <button class="cat-btn" onclick="filterByCat('годинники', this)">Годинники</button>
-    <button class="cat-btn" onclick="filterByCat('павербанки', this)">Павербанки</button>
-    <button class="cat-btn" onclick="filterByCat('чохли', this)">Чохли</button>
-</div>
-
-<div id="product-list-container">
-    </div>
-
-<script>
-    // Функція фільтрації (додаємо до твого коду)
-    function filterByCat(category, btn) {
-        // Міняємо колір кнопок
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const cards = document.querySelectorAll('.product-card'); // припустимо, твої картки мають такий клас
-        cards.forEach(card => {
-            if (category === 'all') {
-                card.style.display = 'block';
-            } else {
-                // Перевіряємо, чи є назва категорії в тексті картки (або можна додати data-category)
-                const text = card.innerText.toLowerCase();
-                card.style.display = text.includes(category) ? 'block' : 'none';
-            }
-        });
-    }
-
-    // Твій код, який ти скинув (БЕЗ ЗМІН):
-    function showProduct(idx) {
-        const p = db[idx];
-        document.getElementById('p-content').innerHTML = `
-            <div style="margin-top:40px;">
+<div style="margin-top:40px;">
                 <div style="display: flex; overflow-x: auto; gap: 10px; margin-bottom: 20px;">
-                    ${p.imgs.map(img => `<img src="${img}" style="width: 100%; border-radius: 15px; max-height: 300px; object-fit: contain;">`).join('')}
+                    ${p.imgs.map(img => <img src="${img}" style="width: 100%; border-radius: 15px; max-height: 300px; object-fit: contain;">).join('')}
                 </div>
                 <h2>${p.name}</h2>
                 <div class="p-price" style="font-size: 28px; color: var(--orange);">${p.price} ₴</div>
@@ -85,7 +14,7 @@
                     <button class="btn-buy" onclick="addToCart(${idx}, 'modal')" style="width: 100%; padding: 15px;">ДОДАТИ В КОШИК</button>
                 </div>
             </div>
-        `;
+        ;
         toggleModal('p-modal');
     }
 
@@ -112,11 +41,11 @@
         }
         list.innerHTML = cart.map((item, i) => {
             total += item.price * item.qty;
-            return `
+            return 
             <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
                 <span>${item.name} (x${item.qty})</span>
                 <b>${item.price * item.qty} ₴ <span onclick="removeItem(${i})" style="color:red; cursor:pointer; margin-left:10px;">✕</span></b>
-            </div>`;
+            </div>;
         }).join('');
         document.getElementById('cart-total').innerText = "Разом: " + total + " ₴";
         document.getElementById('show-form-btn').style.display = 'block';
@@ -139,16 +68,10 @@
         const phone = document.getElementById('custPhone').value;
         if(!name || !phone) return alert("Заповніть дані!");
 
-        let text = `🚀 НОВЕ ЗАМОВЛЕННЯ\n👤 Клієнт: ${name}\n📞 Тел: ${phone}\n\n🛒 ТОВАРИ:\n`;
+        let text = 🚀 НОВЕ ЗАМОВЛЕННЯ\n👤 Клієнт: ${name}\n📞 Тел: ${phone}\n\n🛒 ТОВАРИ:\n;
         let total = 0;
         cart.forEach(i => {
-            text += `▪️ ${i.name} (x${i.qty}) — ${i.price * i.qty} ₴\n`;
+            text += ▪️ ${i.name} (x${i.qty}) — ${i.price * i.qty} ₴\n;
             total += i.price * i.qty;
         });
-        text += `\n💰 РАЗОМ: ${total} ₴`;
-        // Тут далі твій код відправки в Телеграм...
-    }
-</script>
-
-</body>
-</html>
+        text += \n💰 РАЗОМ: ${total} ₴`;
