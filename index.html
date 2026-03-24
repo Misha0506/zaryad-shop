@@ -3,337 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARYAD | Official Store</title>
+    <title>Магазин Заряд</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --orange: #ff6b00; --green: #43b02a; --dark: #121212; --bg: #f4f4f4; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 20px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        header { background: #333; color: white; padding: 15px; text-align: center; font-size: 24px; position: sticky; top: 0; z-index: 100; }
         
-        header { background: #fff; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 24px; font-weight: 900; color: var(--orange); text-decoration: none; }
-        
-        .section-box { background: #fff; margin: 10px; padding: 20px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .about-title { color: var(--orange); margin: 0 0 10px 0; font-size: 20px; }
+        /* Стилі каталогу */
+        .categories { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: white; white-space: nowrap; border-bottom: 1px solid #ddd; }
+        .categories button { padding: 8px 15px; border-radius: 20px; border: 1px solid #333; background: white; cursor: pointer; font-size: 14px; }
+        .categories button.active { background: #333; color: white; }
 
-        .products { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .p-card { background: #fff; border-radius: 15px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .p-card img { width: 100%; height: 140px; object-fit: contain; border-radius: 10px; cursor: pointer; }
-        .p-price { font-size: 19px; font-weight: 800; margin: 8px 0; color: #000; }
-        
-        .qty-controls { display: flex; align-items: center; justify-content: center; gap: 10px; background: #f0f0f0; border-radius: 8px; margin-bottom: 10px; padding: 5px; }
-        .qty-btn { border: none; background: none; font-size: 20px; font-weight: bold; color: var(--orange); width: 30px; cursor: pointer; }
-        
-        .btn-buy { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; }
+        .container { padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .product-card { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .product-card img { max-width: 100%; border-radius: 8px; height: 150px; object-fit: cover; }
+        .product-card h3 { font-size: 16px; margin: 10px 0; }
+        .product-card p { color: #e67e22; font-weight: bold; font-size: 18px; }
 
-        .modal { display:none; position:fixed; inset:0; background:#fff; z-index:2000; overflow-y:auto; padding:20px; }
-        .close-btn { position: fixed; top: 20px; right: 20px; z-index: 3000; background: #eee; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        .footer-contacts { background: var(--dark); color: #fff; padding: 30px 20px; margin-top: 20px; border-top-left-radius: 25px; border-top-right-radius: 25px; text-align: center; }
-        .footer-contacts h3 { color: var(--orange); margin-bottom: 15px; }
-        .contact-link { display: flex; align-items: center; justify-content: center; gap: 10px; color: #fff; text-decoration: none; margin: 12px 0; font-size: 17px; }
-
-        .admin-trigger { position: fixed; bottom: 0; left: 0; width: 40px; height: 40px; background: transparent; z-index: 5000; border: none; }
-        .photo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 15px 0; }
-        .photo-slot { border: 2px dashed #ccc; border-radius: 8px; height: 60px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .photo-slot input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-        .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: none; }
-
-        /* Стилі для списку видалення в адмінці */
-        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
-        .btn-del { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .btn-del-all { background: #000; color: #fff; border: 2px solid #ff4444; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
-
-        #success-card { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; width:85%; padding:30px; border-radius:25px; text-align:center; z-index:7000; box-shadow:0 10px 50px rgba(0,0,0,0.3); border: 2px solid var(--green); }
+        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 1000; width: 90%; max-width: 400px; }
+        #admin-panel input, #admin-panel select { width: 100%; margin: 10px 0; padding: 10px; box-sizing: border-box; }
+        .admin-btn { position: fixed; bottom: 10px; left: 10px; width: 40px; height: 40px; background: transparent; border: none; cursor: pointer; z-index: 1000; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo">ZARYAD</div>
-    <div onclick="toggleModal('cart-modal')" style="font-size: 24px; cursor:pointer; position: relative;">
-        🛒 <span id="cart-count" style="background:var(--orange); color:#fff; border-radius:50%; padding:2px 7px; font-size:12px; position:absolute; top:-10px; right:-10px;">0</span>
-    </div>
-</header>
+<header>МАГАЗИН ЗАРЯД</header>
 
-<div class="section-box">
-    <h2 class="about-title">Про нас ⚡️</h2>
-    <p style="font-size: 14px; color: #444; margin: 0; line-height: 1.5;">
-        <b>ZARYAD_OFFICIAL.UA</b> — ваш провідник у світ автономної енергії. Ми спеціалізуємось на павербанках та зарядних станціях, щоб ви залишалися на зв'язку в будь-якій ситуації.
-    </p>
+<div class="categories" id="category-bar">
+    <button class="active" onclick="filterProducts('all')">Усі</button>
+    <button onclick="filterProducts('навушники')">Навушники</button>
+    <button onclick="filterProducts('годинники')">Годинники</button>
+    <button onclick="filterProducts('павербанки')">Павербанки</button>
+    <button onclick="filterProducts('чохли')">Чохли</button>
 </div>
 
-<div class="products" id="grid"></div>
-
-<footer class="footer-contacts">
-    <h3>Наші контакти</h3>
-    <a href="tel:0955098794" class="contact-link">📞 095 509 87 94</a>
-    <a href="https://t.me/dgruvf" target="_blank" class="contact-link">✈️ Telegram: @dgruvf</a>
-    <a href="https://www.instagram.com/zaryad_official.ua?igsh=MWpuNzR5bXR2emd1eg==" target="_blank" class="contact-link">📸 Instagram</a>
-</footer>
-
-<div id="p-modal" class="modal"><button class="close-btn" onclick="toggleModal('p-modal')">✕</button><div id="p-content"></div></div>
-
-<div id="cart-modal" class="modal">
-    <button class="close-btn" onclick="toggleModal('cart-modal')">✕</button>
-    <h2 style="margin-top:40px;">Ваш Кошик</h2>
-    <div id="cart-list"></div>
-    <h3 id="cart-total" style="text-align:right; margin: 20px 0;">Разом: 0 ₴</h3>
-    <div id="order-form" style="display:none;">
-        <input type="text" id="custName" style="width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #ddd;" placeholder="Ваше ім'я">
-        <input type="tel" id="custPhone" style="width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #ddd;" placeholder="Ваш номер телефону">
-        <button class="btn-buy" onclick="sendOrder()" style="background:var(--orange); padding:18px; width: 100%;">ПІДТВЕРДИТИ ЗАМОВЛЕННЯ</button>
+<div class="container" id="products-container">
     </div>
-    <button id="show-form-btn" class="btn-buy" onclick="showOrderForm()" style="background:var(--orange); padding:15px; width: 100%;">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
-</div>
 
-<div id="success-card">
-    <h1>✅</h1>
-    <h2>Замовлення прийнято!</h2>
-    <p>Ми отримали вашу заявку і скоро зателефонуємо.</p>
-    <button class="btn-buy" onclick="location.reload()" style="padding: 15px 40px;">ОК</button>
-</div>
+<button class="admin-btn" onclick="checkAdmin()"></button>
 
-<button class="admin-trigger" onclick="toggleModal('admin')"></button>
-<div id="admin" class="modal">
-    <button class="close-btn" onclick="toggleModal('admin')">✕</button>
-    <h2 style="margin-top:40px;">Адмін-панель</h2>
-    
-    <button class="btn-del-all" onclick="deleteAllProducts()">🗑️ ВИДАЛИТИ ВСІ ТОВАРИ</button>
-
-    <input type="text" id="pName" placeholder="Назва товару" style="width:100%; padding:12px; margin:5px 0;">
-    <input type="number" id="pPrice" placeholder="Ціна (грн)" style="width:100%; padding:12px; margin:5px 0;">
-    <textarea id="pDesc" placeholder="Опис товару" rows="4" style="width:100%; padding:12px; margin:5px 0;"></textarea>
-    
-    <div class="photo-grid">
-        <div class="photo-slot"><span>+</span><img id="img1"><input type="file" onchange="preview(this, 'img1')"></div>
-        <div class="photo-slot"><span>+</span><img id="img2"><input type="file" onchange="preview(this, 'img2')"></div>
-        <div class="photo-slot"><span>+</span><img id="img3"><input type="file" onchange="preview(this, 'img3')"></div>
-        <div class="photo-slot"><span>+</span><img id="img4"><input type="file" onchange="preview(this, 'img4')"></div>
-        <div class="photo-slot"><span>+</span><img id="img5"><input type="file" onchange="preview(this, 'img5')"></div>
-    </div>
-    
-    <button class="btn-buy" id="saveBtn" onclick="saveToDB()" style="padding:18px; width: 100%; margin-bottom: 30px;">💾 ЗБЕРЕГТИ ТОВАР</button>
-
-    <h3>Керування товарами:</h3>
-    <div id="admin-product-list"></div>
+<div id="admin-panel">
+    <h3>Додати товар</h3>
+    <input type="text" id="prodName" placeholder="Назва товару">
+    <input type="number" id="prodPrice" placeholder="Ціна (грн)">
+    <input type="text" id="prodImg" placeholder="Посилання на фото (якщо є)">
+    <select id="prodCategory">
+        <option value="навушники">Навушники</option>
+        <option value="годинники">Годинники</option>
+        <option value="павербанки">Павербанки</option>
+        <option value="чохли">Чохли</option>
+    </select>
+    <button onclick="saveProduct()" style="width: 100%; padding: 10px; background: green; color: white; border: none; border-radius: 5px;">Зберегти</button>
+    <button onclick="closeAdmin()" style="width: 100%; margin-top: 5px; padding: 10px; background: red; color: white; border: none; border-radius: 5px;">Закрити</button>
 </div>
 
 <script>
-    const TG_TOKEN = '8641699999:AAGPQvo-LZ_hEbJed3zfDX9fPzlylFCLctI';
-    const TG_ID = '7790251894';
-    
-    let db = JSON.parse(localStorage.getItem('zaryad_db')) || [];
-    let cart = JSON.parse(localStorage.getItem('zaryad_cart')) || [];
+    // ТВОЇ ДАНІ FIREBASE (вони залишаються без змін)
+    const firebaseConfig = {
+        databaseURL: "https://shop-zaryad-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function toggleModal(id) {
-        const m = document.getElementById(id);
-        if(id === 'admin' && m.style.display !== 'block') {
-            if(prompt("Пароль:") !== 'Sss0924') return;
-            renderAdminList(); // Оновити список при відкритті адмінки
-        }
-        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        if(id === 'cart-modal' && m.style.display === 'block') updateCartUI();
-    }
+    let allProducts = [];
 
-    // Рендер списку товарів в адмінці для видалення
-    function renderAdminList() {
-        const list = document.getElementById('admin-product-list');
-        list.innerHTML = db.map((p, i) => `
-            <div class="admin-item">
-                <span>${p.name} (${p.price} ₴)</span>
-                <button class="btn-del" onclick="deleteProduct(${i})">Видалити</button>
-            </div>
-        `).join('');
-    }
-
-    function deleteProduct(i) {
-        if(confirm("Видалити цей товар?")) {
-            db.splice(i, 1);
-            localStorage.setItem('zaryad_db', JSON.stringify(db));
-            render();
-            renderAdminList();
+    function checkAdmin() {
+        const pass = prompt("Введіть пароль:");
+        if (pass === "Sss0924") {
+            document.getElementById('admin-panel').style.display = 'block';
         }
     }
 
-    function deleteAllProducts() {
-        if(confirm("ВИ ПЕВНІ? ВСІ ТОВАРИ БУДУТЬ ВИДАЛЕНІ!")) {
-            db = [];
-            localStorage.setItem('zaryad_db', JSON.stringify(db));
-            render();
-            renderAdminList();
-        }
+    function closeAdmin() {
+        document.getElementById('admin-panel').style.display = 'none';
     }
 
-    function preview(input, imgId) {
-        const file = input.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.getElementById(imgId);
-                img.src = e.target.result;
-                img.style.display = 'block';
-                input.parentElement.querySelector('span').style.display = 'none';
-            }
-            reader.readAsDataURL(file);
-        }
-    }
+    function saveProduct() {
+        const name = document.getElementById('prodName').value;
+        const price = document.getElementById('prodPrice').value;
+        const img = document.getElementById('prodImg').value || 'https://via.placeholder.com/150';
+        const category = document.getElementById('prodCategory').value;
 
-    function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        db.forEach((p, idx) => {
-            grid.innerHTML += `
-            <div class="p-card">
-                <img src="${p.imgs[0]}" onclick="openProduct(${idx})">
-                <h3 onclick="openProduct(${idx})">${p.name}</h3>
-                <div class="p-price">${p.price} ₴</div>
-                <div class="qty-controls">
-                    <button class="qty-btn" onclick="changeQty('card-${idx}', -1)">-</button>
-                    <span class="qty-val" id="qty-card-${idx}">1</span>
-                    <button class="qty-btn" onclick="changeQty('card-${idx}', 1)">+</button>
-                </div>
-                <button class="btn-buy" onclick="addToCart(${idx}, 'card-${idx}')">В кошик</button>
-            </div>`;
-        });
-        document.getElementById('cart-count').innerText = cart.length;
-    }
-
-    function changeQty(id, delta) {
-        let el = document.getElementById('qty-' + id);
-        let val = parseInt(el.innerText) + delta;
-        if(val >= 1) el.innerText = val;
-    }
-
-    function openProduct(idx) {
-        const p = db[idx];
-        document.getElementById('p-content').innerHTML = `
-            <div style="margin-top:40px;">
-                <div style="display: flex; overflow-x: auto; gap: 10px; margin-bottom: 20px;">
-                    ${p.imgs.map(img => `<img src="${img}" style="width: 100%; border-radius: 15px; max-height: 300px; object-fit: contain;">`).join('')}
-                </div>
-                <h2>${p.name}</h2>
-                <div class="p-price" style="font-size: 28px; color: var(--orange);">${p.price} ₴</div>
-                <p style="white-space: pre-wrap; color: #444; line-height: 1.6;">${p.desc}</p>
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 15px; text-align:center;">
-                    <div class="qty-controls" style="max-width: 150px; margin: 10px auto;">
-                        <button class="qty-btn" onclick="changeQty('modal', -1)">-</button>
-                        <span class="qty-val" id="qty-modal">1</span>
-                        <button class="qty-btn" onclick="changeQty('modal', 1)">+</button>
-                    </div>
-                    <button class="btn-buy" onclick="addToCart(${idx}, 'modal')" style="width: 100%; padding: 15px;">ДОДАТИ В КОШИК</button>
-                </div>
-            </div>
-        `;
-        toggleModal('p-modal');
-    }
-
-    function addToCart(idx, qtySource) {
-        const qtyVal = parseInt(document.getElementById('qty-' + qtySource).innerText);
-        const p = db[idx];
-        const existing = cart.find(item => item.name === p.name);
-        if(existing) existing.qty += qtyVal;
-        else cart.push({ name: p.name, price: p.price, qty: qtyVal, img: p.imgs[0] });
-        localStorage.setItem('zaryad_cart', JSON.stringify(cart));
-        document.getElementById('cart-count').innerText = cart.length;
-        if(qtySource === 'modal') toggleModal('p-modal');
-        alert("Додано!");
-    }
-
-    function updateCartUI() {
-        const list = document.getElementById('cart-list');
-        let total = 0;
-        if(!cart.length) {
-            list.innerHTML = "<p style='text-align:center;'>Кошик порожній</p>";
-            document.getElementById('cart-total').innerText = "Разом: 0 ₴";
-            document.getElementById('show-form-btn').style.display = 'none';
-            return;
-        }
-        list.innerHTML = cart.map((item, i) => {
-            total += item.price * item.qty;
-            return `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
-                <span>${item.name} (x${item.qty})</span>
-                <b>${item.price * item.qty} ₴ <span onclick="removeItem(${i})" style="color:red; cursor:pointer; margin-left:10px;">✕</span></b>
-            </div>`;
-        }).join('');
-        document.getElementById('cart-total').innerText = "Разом: " + total + " ₴";
-        document.getElementById('show-form-btn').style.display = 'block';
-    }
-
-    function removeItem(i) {
-        cart.splice(i, 1);
-        localStorage.setItem('zaryad_cart', JSON.stringify(cart));
-        document.getElementById('cart-count').innerText = cart.length;
-        updateCartUI();
-    }
-
-    function showOrderForm() {
-        document.getElementById('order-form').style.display = 'block';
-        document.getElementById('show-form-btn').style.display = 'none';
-    }
-
-    async function sendOrder() {
-        const name = document.getElementById('custName').value;
-        const phone = document.getElementById('custPhone').value;
-        if(!name || !phone) return alert("Заповніть дані!");
-
-        let text = `🚀 НОВЕ ЗАМОВЛЕННЯ\n👤 Клієнт: ${name}\n📞 Тел: ${phone}\n\n🛒 ТОВАРИ:\n`;
-        let total = 0;
-        cart.forEach(i => {
-            text += `▪️ ${i.name} (x${i.qty}) — ${i.price * i.qty} ₴\n`;
-            total += i.price * i.qty;
-        });
-        text += `\n💰 РАЗОМ: ${total} ₴`;
-
-        try {
-            const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: TG_ID, text: text })
+        if(name && price) {
+            db.ref('products').push({
+                name: name,
+                price: price,
+                img: img,
+                category: category
             });
-            const data = await res.json();
-            if(data.ok) {
-                localStorage.removeItem('zaryad_cart');
-                cart = [];
-                document.getElementById('success-card').style.display = 'block';
-                document.getElementById('cart-modal').style.display = 'none';
-            } else { alert("Помилка Telegram: " + data.description); }
-        } catch(e) { alert("Помилка мережі"); }
+            alert("Товар додано!");
+            closeAdmin();
+        }
     }
 
-    async function saveToDB() {
-        const imgs = [];
-        for (let i = 1; i <= 5; i++) {
-            const imgEl = document.getElementById('img' + i);
-            if (imgEl.src && imgEl.src.startsWith('data:')) imgs.push(imgEl.src);
-        }
-        if(!imgs.length) return alert("Додайте фото!");
-        
-        const newProduct = {
-            name: document.getElementById('pName').value,
-            price: parseInt(document.getElementById('pPrice').value),
-            desc: document.getElementById('pDesc').value,
-            imgs: imgs
-        };
-        
-        db.unshift(newProduct);
-        localStorage.setItem('zaryad_db', JSON.stringify(db));
-        
-        // Очищення полів після збереження
-        document.getElementById('pName').value = '';
-        document.getElementById('pPrice').value = '';
-        document.getElementById('pDesc').value = '';
-        for(let i=1; i<=5; i++) {
-            document.getElementById('img'+i).style.display = 'none';
-            document.getElementById('img'+i).src = '';
-            document.querySelector('.photo-slot span').style.display = 'block';
-        }
-
-        render();
-        renderAdminList();
-        alert("Товар збережено!");
+    function displayProducts(products) {
+        const container = document.getElementById('products-container');
+        container.innerHTML = '';
+        products.forEach(p => {
+            container.innerHTML += `
+                <div class="product-card">
+                    <img src="${p.img}">
+                    <h3>${p.name}</h3>
+                    <p>${p.price} грн</p>
+                </div>
+            `;
+        });
     }
 
-    render();
+    function filterProducts(category) {
+        // Оновлюємо вигляд кнопок
+        const buttons = document.querySelectorAll('.categories button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if (category === 'all') {
+            displayProducts(allProducts);
+        } else {
+            const filtered = allProducts.filter(p => p.category === category);
+            displayProducts(filtered);
+        }
+    }
+
+    // Завантаження товарів
+    db.ref('products').on('value', (snapshot) => {
+        allProducts = [];
+        snapshot.forEach(child => {
+            allProducts.push(child.val());
+        });
+        displayProducts(allProducts);
+    });
 </script>
+
 </body>
 </html>
